@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using AutoMapper;
+using ApplicationInsightsFullDemoApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApplicationInsightsFullDemoApi
 {
@@ -20,7 +22,8 @@ namespace ApplicationInsightsFullDemoApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddAutoMapper(typeof(Startup));        
+            services.AddAutoMapper(typeof(Startup));
+            services.AddDbContext<AdventureWorksDemoContext>(options => options.UseSqlServer(Configuration.GetConnectionString("SQLServerDbContext")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
