@@ -103,5 +103,11 @@ Now it´s time to create our controller. We need to do it manually, since EFCore
 
 ![](Misc/15.png)
 
+# Deploy
+
+Deploy the web app
+
+![](Misc/webapp-cosmos.png)
+
 
 

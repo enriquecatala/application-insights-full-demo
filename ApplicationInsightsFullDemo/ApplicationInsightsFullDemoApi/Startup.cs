@@ -34,7 +34,7 @@ namespace ApplicationInsightsFullDemoApi
                 app.UseDeveloperExceptionPage();
             }
 
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             app.UseRouting();
 

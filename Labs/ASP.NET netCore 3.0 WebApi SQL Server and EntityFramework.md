@@ -178,3 +178,15 @@ Y finalmente quedará así:
 ## Appsettings.json
 
 Make appsettings.json as "copy always"
+
+# Deploy 
+
+Deploy the app 
+
+![](Misc/webapp-sql.png)
+
+![](Misc/webapp-sql-deploy1.png)
+
+And finally, test the web api
+
+![](Misc/webapp-sql-deploy2.png)
