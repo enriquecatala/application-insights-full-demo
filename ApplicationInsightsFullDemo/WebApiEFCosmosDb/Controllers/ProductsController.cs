@@ -64,7 +64,12 @@ namespace WebApiEFCosmosDb.Controllers
         [HttpPost]
         public async Task PostProduct(Product product)
         {
-            await _context.PostProduct(product);            
+            try
+            {
+                await _context.PostProduct(product);
+            }
+            catch(Exception e)
+            { throw e; }
         }
     }
 }

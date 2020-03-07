@@ -19,10 +19,15 @@ namespace ConsoleInterface
 
         static  void Main(string[] args)
         {
-
+#if DEBUG
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.debug.json", optional: true, reloadOnChange: true);
+#else
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+#endif
 
             IConfigurationRoot configuration = builder.Build();
 

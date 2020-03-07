@@ -55,8 +55,13 @@ namespace WebApiEFCosmosDb.Services
 
         public async Task  PostProduct(Product product)
         {
-            var retorno = await this._container.CreateItemAsync<Product>(product, new PartitionKey(product.ProductId));
-            
+            try
+            {
+                //  var retorno = await this._container.CreateItemAsync<Product>(product, new PartitionKey(product.ProductId));
+                var retorno = await this._container.CreateItemAsync<Product>(product);
+            }
+            catch(Exception e)
+            { throw e; }
         }
     }
 }

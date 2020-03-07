@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using WebApiEFCosmosDb.Converters;
 
 namespace WebApiEFCosmosDb.Models
 {
@@ -10,6 +12,8 @@ namespace WebApiEFCosmosDb.Models
             SalesOrderDetail = new HashSet<SalesOrderDetail>();
         }
 
+        [JsonConverter(typeof(JsonToStringConverter))]
+        [JsonProperty(PropertyName = "id")]
         public int ProductId { get; set; }
         public string Name { get; set; }
         public string ProductNumber { get; set; }
@@ -23,6 +27,7 @@ namespace WebApiEFCosmosDb.Models
         public DateTime SellStartDate { get; set; }
         public DateTime? SellEndDate { get; set; }
         public DateTime? DiscontinuedDate { get; set; }
+        [JsonIgnore]
         public byte[] ThumbNailPhoto { get; set; }
         public string ThumbnailPhotoFileName { get; set; }
         public Guid Rowguid { get; set; }

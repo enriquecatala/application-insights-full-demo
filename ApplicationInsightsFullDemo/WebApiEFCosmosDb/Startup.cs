@@ -68,7 +68,7 @@ namespace WebApiEFCosmosDb
                                 .Build();
             CosmosDbService cosmosDbService = new CosmosDbService(client, databaseName, containerName);
             DatabaseResponse database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
-            await database.Database.CreateContainerIfNotExistsAsync(containerName, "/ProductID");
+            await database.Database.CreateContainerIfNotExistsAsync(containerName, "/productid");
             return cosmosDbService;
         }
     }
