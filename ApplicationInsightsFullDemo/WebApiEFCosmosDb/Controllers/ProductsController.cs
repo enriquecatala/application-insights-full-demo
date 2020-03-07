@@ -50,17 +50,10 @@ namespace WebApiEFCosmosDb.Controllers
             return product;
         }
 
-        // DELETE: api/products/deleteproducts/5
-        [HttpDelete("deleteproduct/{id}")]
-        public async Task DeleteProduct(int id)
-        {
-           await _context.DeleteProduct(id);            
-        }
-
         // POST: api/products/postproduct
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see https://aka.ms/RazorPagesCRUD.
-        [Route("postproduct")]        
+        [Route("postproduct")]
         [HttpPost]
         public async Task PostProduct(Product product)
         {
@@ -68,8 +61,17 @@ namespace WebApiEFCosmosDb.Controllers
             {
                 await _context.PostProduct(product);
             }
-            catch(Exception e)
+            catch (Exception e)
             { throw e; }
         }
+
+        // DELETE: api/products/deleteproducts/5
+        [HttpDelete("deleteproduct/{id}")]
+        public async Task DeleteProduct(int id)
+        {
+           await _context.DeleteProduct(id);            
+        }
+
+      
     }
 }

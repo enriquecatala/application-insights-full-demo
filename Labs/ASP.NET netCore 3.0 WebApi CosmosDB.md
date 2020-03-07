@@ -80,7 +80,7 @@ private static async Task<CosmosDbService> InitializeCosmosClientInstanceAsync(I
                         .Build();
     CosmosDbService cosmosDbService = new CosmosDbService(client, databaseName, containerName);
     DatabaseResponse database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
-    await database.Database.CreateContainerIfNotExistsAsync(containerName, "/ProductId");
+    await database.Database.CreateContainerIfNotExistsAsync(containerName, "/productid");
     return cosmosDbService;
 }
 ```
@@ -103,6 +103,85 @@ Now it´s time to create our controller. We need to do it manually, since EFCore
 
 ![](Misc/15.png)
 
+And implement some methods. At least, try to implement methods to Write data into the CosmosDB and to extract data from CosmosdDB
+
+take a look for example to the methods 
+
+```csharp
+// GET: api/Products/5
+[HttpGet("{id}")]
+public async Task<ActionResult<Product>> GetProduct(int id)
+{
+    var product = await _context.GetProduct(id);
+
+    if (product == null)
+    {
+        throw new NotImplementedException();
+    }
+
+    return product;
+}
+
+// POST: api/products/postproduct
+// To protect from overposting attacks, please enable the specific properties you want to bind to, for
+// more details see https://aka.ms/RazorPagesCRUD.
+[Route("postproduct")]
+[HttpPost]
+public async Task PostProduct(Product product)
+{
+    try
+    {
+        await _context.PostProduct(product);
+    }
+    catch (Exception e)
+    { throw e; }
+}
+```
+# Prepare serialization
+
+Partition key in the object "Product", is integer, but CosmosDB requires to be "string". 
+
+Create a converter to transform the column 
+
+```csharp
+public class JsonToStringConverter : JsonConverter
+{
+    public override bool CanConvert(Type objectType)
+    {
+        return true;
+    }
+
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        writer.WriteValue(value.ToString());
+    }
+
+    public override bool CanRead
+    {
+        get { return false; }
+    }
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+```
+
+## Configure serialization of Product.cs
+
+Override some parameters
+
+```csharp
+[JsonConverter(typeof(JsonToStringConverter))]
+[JsonProperty(PropertyName = "id")]
+public int ProductId { get; set; }
+
+//Ignore thumbnails
+[JsonIgnore]
+public byte[] ThumbNailPhoto { get; set; }
+```
+
 # Deploy
 
 Deploy the web app
@@ -110,4 +189,10 @@ Deploy the web app
 ![](Misc/webapp-cosmos.png)
 
 
+# Test
 
+Since we still don´t have data in cosmosdb, this is ok
+
+![](Misc/test-nodata.png)
+
+>Note: navigate to /api/products

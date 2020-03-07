@@ -35,31 +35,26 @@ namespace ConsoleInterface
             _urlApiSqlServer = configuration.GetSection("UrlApiSqlServer").Value;
             _urlApiCosmos = configuration.GetSection("UrlApiCosmos").Value;
 
-            DoWork();
+            InitializeCosmosDB();
 
             Console.ReadLine();
         }
 
-        private static async void DoWork()
+        private static async void InitializeCosmosDB()
         {
             /// Get the products
             var products = GetProducts();
             foreach (var item in products.Result)
             {
-                Console.WriteLine(item.ProductId + " " + item.Name);
+                Console.WriteLine(String.Format("Readed from SQL Server: ProductId {0} - {1}", item.ProductId, item.Name));
 
                 await InsertProductInCosmosDb(item);
+
+                Console.WriteLine("Inserted Product in CosmosDB");
             }
         }
 
-        private static async Task<IEnumerable<string>> GetItems(string path)
-        {
-            var response = await Client.GetAsync(path);
-
-            if (!response.IsSuccessStatusCode) return null;
-
-            return await response.Content.ReadAsAsync<List<string>>();
-        }
+        #region ApiCalls
 
         private static async Task<List<Product>> GetProducts()
         {
@@ -107,5 +102,6 @@ namespace ConsoleInterface
                 throw e;
             }
         }
+        #endregion ApiCalls
     }
 }
