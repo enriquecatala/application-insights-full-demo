@@ -1,4 +1,5 @@
 ﻿using ConsoleInterface.Models;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -35,9 +36,21 @@ namespace ConsoleInterface
             _urlApiSqlServer = configuration.GetSection("UrlApiSqlServer").Value;
             _urlApiCosmos = configuration.GetSection("UrlApiCosmos").Value;
 
+            #region ApplicationInsights
+            TelemetryConfiguration.Active.InstrumentationKey = configuration.GetSection("ApplicationInsights:InstrumentationKey").Value;
+
+#if DEBUG
+            // Telemetry results exposed inmediately 
+            // Switch it off in production, because it may slow down your app.
+            TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
+#endif
+
+            #endregion
+
             TestCosmosDBInitialization();
             InitializeCosmosDB();
 
+            Console.WriteLine("End of CosmosDB initialization, press a key to continue...");
             Console.ReadLine();
         }
 

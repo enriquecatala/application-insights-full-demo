@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -30,6 +31,13 @@ namespace WebApiEFCosmosDb
         {
             services.AddControllers();
             services.AddSingleton<ICosmosDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
+            // The following line enables Application Insights telemetry collection.
+            services.AddApplicationInsightsTelemetry();
+#if DEBUG
+            // Telemetry results exposed inmediately 
+            // Switch it off in production, because it may slow down your app.
+            TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
+#endif
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
