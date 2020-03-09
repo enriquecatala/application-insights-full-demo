@@ -183,4 +183,4 @@ services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o)
     module.EnableW3CHeadersInjection = true;
 });
 ```
-
+> **NOTE**: For more information https://docs.microsoft.com/es-es/azure/azure-monitor/app/asp-net-core#configuring-or-removing-default-telemetrymodules

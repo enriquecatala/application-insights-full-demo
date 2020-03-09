@@ -31,10 +31,13 @@ namespace ConsoleInterface
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.debug.json", optional: true, reloadOnChange: true);
 #else
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                        var builder = new ConfigurationBuilder()
+                            .SetBasePath(Directory.GetCurrentDirectory())
+                            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 #endif
+            //var builder = new ConfigurationBuilder()
+            //    .SetBasePath(Directory.GetCurrentDirectory())
+            //    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
             IConfigurationRoot configuration = builder.Build();
 
@@ -161,7 +164,7 @@ namespace ConsoleInterface
             finally
             {
                 timer.Stop();
-                _telemetryClient.TrackDependency("HTTP", "api/products", "", startTime, timer.Elapsed, success);
+                _telemetryClient.TrackDependency("HTTP", "WebApiSqlServer", "", startTime, timer.Elapsed, success);
             }
 
             return retorno;
@@ -195,7 +198,7 @@ namespace ConsoleInterface
             finally
             {
                 timer.Stop();
-                _telemetryClient.TrackDependency("HTTP", "api/products/{0}", String.Format("api/products/{0}", productid), startTime, timer.Elapsed, success);
+                _telemetryClient.TrackDependency("HTTP", "WebApiSqlServer", String.Format("api/products/{0}", productid), startTime, timer.Elapsed, success);
             }
 
             return retorno;
@@ -208,6 +211,7 @@ namespace ConsoleInterface
                 var startTime = DateTime.UtcNow;
                 var timer = System.Diagnostics.Stopwatch.StartNew();
                 bool success = false;
+                int pid = product.ProductId;
                 try
                 {
                     // making dependency call
@@ -230,7 +234,7 @@ namespace ConsoleInterface
                 finally
                 {
                     timer.Stop();
-                    _telemetryClient.TrackDependency("HTTP", "api/products/postproduct/", String.Format("api/products/postproduct/", product.ToString()), startTime, timer.Elapsed, success);
+                    _telemetryClient.TrackDependency("HTTP", "WebApiCosmosDb", String.Format("api/products/postproduct/", pid.ToString()), startTime, timer.Elapsed, success);
                 }
                 return product;
             }

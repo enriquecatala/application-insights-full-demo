@@ -31,5 +31,9 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services" />
+  </ItemGroup>
+
 
 </Project>
