@@ -1,8 +1,16 @@
 # Console app for testing
 
->NOTE: Please first ensure you have completed [ASP.NET Core WebApi and CosmosDB](/Labs/ASP.NET%20netCore%203.0%20WebApi%20CosmosDB.md)
+>NOTE: Please first ensure you have completed [Lab 4](Lab4%20-%20ASP.NET%20netCore%203.0%20WebApi%20CosmosDB.md)
 
-# nuget
+## Create the console application
+
+![](Misc/16.png)
+
+Please, use "_ConsoleInterface_" as the name of our project
+
+# NuGet packages
+
+Add the following NuGet packages to our solution
 
 - Microsoft.AspNet.WebApi.Client
 - Newtonsoft.json
@@ -10,15 +18,10 @@
 - Microsoft.Extensions.Configuration.FileExtensions
 - Microsoft.Extensions.Configuration.Json
 
-# Create the console application
-
-![](Misc/16.png)
-
-Put the name "ConsoleInterface"
 
 ## Add appsettings.json
 
-Create the file appsettings.json and add the following contents
+Create the file _appsettings.json_ and add the following contents
 
 ```json
 {
@@ -31,8 +34,11 @@ Create the file appsettings.json and add the following contents
   }
 }
 ```
+
+>_**NOTE:**_ Please, remember to update the URLs acordingly to your Web Apps
+
 ## Load configuration
-Add the following code to the Main to be able to read the configuration file
+Add the following code to the _static void Main(string[] args)_ to be able to read the configuration file
 
 ```csharp
 #if DEBUG
@@ -56,14 +62,12 @@ IConfigurationRoot configuration = builder.Build();
 _urlApiSqlServer = configuration.GetSection("UrlApiSqlServer").Value;
 _urlApiCosmos = configuration.GetSection("UrlApiCosmos").Value;
 
-DoWork();
-
-Console.ReadLine();
+...
 ```
 
 # Initialize CosmosDB
 
-Add the following code to Program.cs
+Add the following method to _Program.cs_
 
 ```csharp
 private static async void InitializeCosmosDB()
@@ -139,4 +143,8 @@ private static async Task<Product> InsertProductInCosmosDb(Product product)
 
 # Execute the ConsoleInterface
 
+Execute in debug mode
+
 ![](Misc/test-execution.png)
+
+>NOTE: You should see how the tool is getting data from SQL Server and storing that data in CosmosDB

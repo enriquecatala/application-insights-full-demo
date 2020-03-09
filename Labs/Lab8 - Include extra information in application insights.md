@@ -2,7 +2,7 @@
 
 In this demo, we are going to add useful information to our tools
 
-> NOTE: Since the demo code is not prepared to have data in cosmosdb with the first run, **please, drop and create the cosmosdb collection**
+> NOTE: Since the demo code is not prepared to have data in cosmosdb with the first run, [**please, drop and create the cosmosdb collection**](#how-to-delete-a-container)
 
 
 # ConsoleInterface configuration
@@ -51,7 +51,7 @@ And call the method with
 InitTelemetry(configuration.GetSection("ApplicationInsights:InstrumentationKey").Value);
 ```
 
-## Create your own operator encapsulator
+## Create your own operator wrapper
 
 To enhance data comming from ApplicationInsights, it´s good to add your own interesting data thread to the stack
 
@@ -88,14 +88,16 @@ Now, go to _ApplicationInsights -> Application map_
 
 # Add dependency tracking
 
-Our ConsoleInterface is separated from the webapis, so we can´t see the real execution flow. Let´s enhance our telemetry solution
+Our ConsoleInterface does´nt show information about external calls. And our WebApis does´nt show information about SQL executions. Let´s enhance our telemetry solution
 
 ## Configure ConsoleInterface
 
 ```csharp
 DependencyTrackingTelemetryModule depModule = new DependencyTrackingTelemetryModule();
-    depModule.Initialize(TelemetryConfiguration.Active);
+depModule.Initialize(TelemetryConfiguration.Active);
 ```
+
+> **NOTE:** For more info https://docs.microsoft.com/es-es/azure/azure-monitor/app/asp-net-dependencies#setup-automatic-dependency-tracking-in-console-apps
 
 And now, we are able to track dependency calls to external sources, by encapsulating our calls inside this code:
 
@@ -184,3 +186,19 @@ services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o)
 });
 ```
 > **NOTE**: For more information https://docs.microsoft.com/es-es/azure/azure-monitor/app/asp-net-core#configuring-or-removing-default-telemetrymodules
+
+## Check the information
+
+With those changes, you will be able to review a lot of information, please take a look on what you have...which now includes for example, the SQL Server query executed, who and when executed the query...
+
+![](Misc/end.png)
+
+![](Misc/play1.png)
+
+![](Misc/play2.png)
+
+# Appendix 
+
+## How to delete a container
+
+![](Misc/deletecontainer.png)

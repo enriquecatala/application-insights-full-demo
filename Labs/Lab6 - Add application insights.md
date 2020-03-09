@@ -1,14 +1,15 @@
-# Add application insights to our tool
+# Add application insights
 
-This demo requires that you completed successfuly the demos:
-- [ASP.NET netCore 3.0 WebApi SQL Server and EntityFramework](ASP.NET%20netCore%203.0%20WebApi%20SQL%20Server%20and%20EntityFramework.md)
-- [ASP.NET netCore 3.0 WebApi CosmosDB](ASP.NET%20netCore%203.0%20WebApi%20SQL%20Server%20and%20EntityFramework.md)
-- [ConsoleApp](ConsoleApp.md)
+**IMPORTANT:** This demo requires that you completed successfuly the labs:
+- [Lab 2](Lab2%20-%20Create%20infrastructure.ipynb)
+- [Lab 3](Lab3%20-%20WebApi%20SQL%20Server%20and%20EntityFramework.md)
+- [Lab 4](Lab4%20-%20ASP.NET%20netCore%203.0%20WebApi%20CosmosDB.md)
+- [Lab 5](Lab5%20-%20ConsoleInterface.md)
 
 
 ## Adding Application insights packages
 
-Add the following packages to our solutions
+To get telemetry data, you need to add the following packages to our 3 solutions: 
 - Microsoft.ApplicationInsights
 - Microsoft.ApplicationInsights.AspNetCore
 - Microsoft.ApplicationInsights.DependencyCollector 
@@ -75,6 +76,7 @@ TelemetryConfiguration.Active.InstrumentationKey = configuration.GetSection("App
             TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
 #endif
 ```
+>**NOTE:** For more info https://docs.microsoft.com/es-es/azure/azure-monitor/app/asp-net-core
 
 
 

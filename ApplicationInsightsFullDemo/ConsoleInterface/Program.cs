@@ -18,7 +18,7 @@ namespace ConsoleInterface
     {
         private static readonly HttpClient Client = new HttpClient();
 
-        public static TelemetryClient _telemetryClient = new TelemetryClient();
+        private static TelemetryClient _telemetryClient = null;
 
 
         private static string _urlApiSqlServer = String.Empty;
@@ -31,13 +31,10 @@ namespace ConsoleInterface
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.debug.json", optional: true, reloadOnChange: true);
 #else
-                        var builder = new ConfigurationBuilder()
-                            .SetBasePath(Directory.GetCurrentDirectory())
-                            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 #endif
-            //var builder = new ConfigurationBuilder()
-            //    .SetBasePath(Directory.GetCurrentDirectory())
-            //    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
             IConfigurationRoot configuration = builder.Build();
 
@@ -65,8 +62,14 @@ namespace ConsoleInterface
 
         private static async void InitializeCosmosDB()
         {
-            /// Get the products
-            var products = GetProducts();
+            Task<List<Product>> products = null;
+            using (var operation = _telemetryClient.StartOperation<RequestTelemetry>("InsertProductInCosmosDb"))
+            {
+                /// Get the products
+                products = GetProducts();
+                _telemetryClient.StopOperation(operation); //flush
+            }
+
             foreach (var item in products.Result)
             {
                 Console.WriteLine(String.Format("Readed from SQL Server: ProductId {0} - {1}", item.ProductId, item.Name));
@@ -77,9 +80,9 @@ namespace ConsoleInterface
                     {
                         await InsertProductInCosmosDb(item);
                         _telemetryClient.StopOperation(operation); //flush
-                    }
 
-                Console.WriteLine("Inserted Product in CosmosDB");
+                        Console.WriteLine(String.Format("Inserted Product {0} in CosmosDB", item.ProductId));
+                    }
             }
         }
 
@@ -92,16 +95,27 @@ namespace ConsoleInterface
 
             await InsertProductInCosmosDb(p.Result);
 
-            Console.WriteLine("Inserted Product in CosmosDB");
+            Console.WriteLine(String.Format("Inserted Product {0} in CosmosDB", p.Result.ProductId));
         }
 
         #region ApplicationInsights
 
         public static void InitTelemetry(string key)
         {
-            TelemetryConfiguration.Active.InstrumentationKey = key;
 
-            _telemetryClient.InstrumentationKey = key;
+            TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.CreateDefault();
+            telemetryConfiguration.InstrumentationKey = key;
+            telemetryConfiguration.TelemetryInitializers.Add(new HttpDependenciesParsingTelemetryInitializer());
+
+            /// Initialization of dependency tracking
+            DependencyTrackingTelemetryModule depModule = new DependencyTrackingTelemetryModule();
+            depModule.Initialize(telemetryConfiguration);
+
+            _telemetryClient = new TelemetryClient(telemetryConfiguration);
+
+           // TelemetryConfiguration.Active.InstrumentationKey = key;
+
+            //_telemetryClient.InstrumentationKey = key;
             _telemetryClient.Context.User.Id = Environment.UserName;
             _telemetryClient.Context.Operation.Id = Guid.NewGuid().ToString();
             _telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
@@ -127,9 +141,8 @@ namespace ConsoleInterface
             TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
 #endif
 
-            /// Initialization of dependency tracking
-            DependencyTrackingTelemetryModule depModule = new DependencyTrackingTelemetryModule();
-            depModule.Initialize(TelemetryConfiguration.Active);
+     
+            
         }
 
         #endregion 
@@ -143,6 +156,7 @@ namespace ConsoleInterface
             var startTime = DateTime.UtcNow;
             var timer = System.Diagnostics.Stopwatch.StartNew();
             bool success = false;
+            
             try
             {
                 // making dependency call
@@ -164,7 +178,7 @@ namespace ConsoleInterface
             finally
             {
                 timer.Stop();
-                _telemetryClient.TrackDependency("HTTP", "WebApiSqlServer", "", startTime, timer.Elapsed, success);
+                _telemetryClient.TrackDependency("HTTP", "WebApiSqlServer", "api/products/", startTime, timer.Elapsed, success);
             }
 
             return retorno;
@@ -179,7 +193,6 @@ namespace ConsoleInterface
             bool success = false;
             try
             {
-                // making dependency call
                 using (HttpClient client = new HttpClient())
                 {
                     client.BaseAddress = new Uri(_urlApiSqlServer);
@@ -200,7 +213,6 @@ namespace ConsoleInterface
                 timer.Stop();
                 _telemetryClient.TrackDependency("HTTP", "WebApiSqlServer", String.Format("api/products/{0}", productid), startTime, timer.Elapsed, success);
             }
-
             return retorno;
         }
 

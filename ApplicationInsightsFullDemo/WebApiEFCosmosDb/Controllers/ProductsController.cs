@@ -19,15 +19,6 @@ namespace WebApiEFCosmosDb.Controllers
             _context = cosmosDbService;
         }
 
-        /*
-        Task PostProduct(Product product);
-        Task DeleteProduct(int id);
-        bool ProductExists(int id);
-
-        Task<ActionResult<Product>> GetProduct(int id);
-        Task<ActionResult<IEnumerable<Product>>> GetProducts(string queryString);
-         */
-
         // GET: api/Products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
