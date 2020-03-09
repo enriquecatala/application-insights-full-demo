@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -33,6 +34,17 @@ namespace WebApiEFCosmosDb
             services.AddSingleton<ICosmosDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
             // The following line enables Application Insights telemetry collection.
             services.AddApplicationInsightsTelemetry();
+
+            //Use our own initializer to set up the cloudrole name
+            services.AddSingleton<ITelemetryInitializer, CloudRoleNameTelemetryInitializer>();
+
+            // The following configures DependencyTrackingTelemetryModule.
+            // Similarly, any other default modules can be configured.
+            services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
+            {
+                module.EnableW3CHeadersInjection = true;
+            });
+
 #if DEBUG
             // Telemetry results exposed inmediately 
             // Switch it off in production, because it may slow down your app.

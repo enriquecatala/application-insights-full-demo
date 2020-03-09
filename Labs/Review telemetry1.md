@@ -21,3 +21,14 @@ As you can see, we don´t have too much data to analyze. Please play a little bi
 
 ![](Misc/d2.png)
 
+Let´s see which information i have from each call
+
+![](Misc/d3.png)
+
+As you can see, we have some information, but not as useful as it could be
+
+![](Misc/d4.png)
+
+# Add relevant information to our tools
+
+Let´s continue with the next lab

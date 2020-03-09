@@ -7,6 +7,8 @@ using AutoMapper;
 using ApplicationInsightsFullDemoApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ApplicationInsights.Extensibility;
+using WebApiEFSqlServer;
+using Microsoft.ApplicationInsights.DependencyCollector;
 
 namespace ApplicationInsightsFullDemoApi
 {
@@ -28,6 +30,17 @@ namespace ApplicationInsightsFullDemoApi
             services.AddDbContext<AdventureWorksDemoContext>(options => options.UseSqlServer(Configuration.GetConnectionString("SQLServerDbContext")));
             // The following line enables Application Insights telemetry collection.
             services.AddApplicationInsightsTelemetry();
+
+            //Use our own initializer to set up the cloudrole name
+            services.AddSingleton<ITelemetryInitializer, CloudRoleNameTelemetryInitializer>();
+
+            // The following configures DependencyTrackingTelemetryModule.
+            // Similarly, any other default modules can be configured.
+            services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
+            {
+                module.EnableW3CHeadersInjection = true;
+            });
+
 #if DEBUG
             // Telemetry results exposed inmediately 
             // Switch it off in production, because it may slow down your app.

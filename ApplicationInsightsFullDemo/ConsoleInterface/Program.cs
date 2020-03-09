@@ -1,4 +1,7 @@
 ﻿using ConsoleInterface.Models;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -15,10 +18,13 @@ namespace ConsoleInterface
     {
         private static readonly HttpClient Client = new HttpClient();
 
+        public static TelemetryClient _telemetryClient = new TelemetryClient();
+
+
         private static string _urlApiSqlServer = String.Empty;
         private static string _urlApiCosmos = String.Empty;
 
-        static  void Main(string[] args)
+        static void Main(string[] args)
         {
 #if DEBUG
             var builder = new ConfigurationBuilder()
@@ -36,19 +42,19 @@ namespace ConsoleInterface
             _urlApiSqlServer = configuration.GetSection("UrlApiSqlServer").Value;
             _urlApiCosmos = configuration.GetSection("UrlApiCosmos").Value;
 
-            #region ApplicationInsights
-            TelemetryConfiguration.Active.InstrumentationKey = configuration.GetSection("ApplicationInsights:InstrumentationKey").Value;
 
-#if DEBUG
-            // Telemetry results exposed inmediately 
-            // Switch it off in production, because it may slow down your app.
-            TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
-#endif
+            InitTelemetry(configuration.GetSection("ApplicationInsights:InstrumentationKey").Value);
 
-            #endregion
-
-            TestCosmosDBInitialization();
-            InitializeCosmosDB();
+            using (var operation = _telemetryClient.StartOperation<RequestTelemetry>("TestCosmosDBInitialization"))
+            {
+                TestCosmosDBInitialization();
+                _telemetryClient.StopOperation(operation); //flush
+            }
+            using (var operation = _telemetryClient.StartOperation<RequestTelemetry>("InitializeCosmosDB"))
+            {
+                InitializeCosmosDB();
+                _telemetryClient.StopOperation(operation); //flush
+            }
 
             Console.WriteLine("End of CosmosDB initialization, press a key to continue...");
             Console.ReadLine();
@@ -63,8 +69,12 @@ namespace ConsoleInterface
                 Console.WriteLine(String.Format("Readed from SQL Server: ProductId {0} - {1}", item.ProductId, item.Name));
 
                 //680 is the one used for testing
-                if(item.ProductId!=680)
-                    await InsertProductInCosmosDb(item);
+                if (item.ProductId != 680)
+                    using (var operation = _telemetryClient.StartOperation<RequestTelemetry>("InsertProductInCosmosDb"))
+                    {
+                        await InsertProductInCosmosDb(item);
+                        _telemetryClient.StopOperation(operation); //flush
+                    }
 
                 Console.WriteLine("Inserted Product in CosmosDB");
             }
@@ -82,24 +92,76 @@ namespace ConsoleInterface
             Console.WriteLine("Inserted Product in CosmosDB");
         }
 
+        #region ApplicationInsights
+
+        public static void InitTelemetry(string key)
+        {
+            TelemetryConfiguration.Active.InstrumentationKey = key;
+
+            _telemetryClient.InstrumentationKey = key;
+            _telemetryClient.Context.User.Id = Environment.UserName;
+            _telemetryClient.Context.Operation.Id = Guid.NewGuid().ToString();
+            _telemetryClient.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+            _telemetryClient.Context.Cloud.RoleName = "ConsoleInterface";
+
+
+            /// Custom properites
+            var properties = new Dictionary<string, string>
+            {
+#if DEBUG
+                {"DEBUG_MODE",   "true"},
+#endif
+                {"Version", String.Format("v{0} ", typeof(ConsoleInterface.Program).Assembly.GetName().Version) }
+            };
+            foreach (var p in properties)
+            {
+                if (!_telemetryClient.Context.Properties.ContainsKey(p.Key))
+                    _telemetryClient.Context.Properties.Add(p);
+            }
+#if DEBUG
+            // Telemetry results exposed inmediately 
+            // Switch it off in production, because it may slow down your app.
+            TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
+#endif
+
+            /// Initialization of dependency tracking
+            DependencyTrackingTelemetryModule depModule = new DependencyTrackingTelemetryModule();
+            depModule.Initialize(TelemetryConfiguration.Active);
+        }
+
+        #endregion 
+
         #region ApiCalls
 
         private static async Task<List<Product>> GetProducts()
         {
             var retorno = new List<Product>();
 
-            using (HttpClient client = new HttpClient())
+            var startTime = DateTime.UtcNow;
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            bool success = false;
+            try
             {
-                client.BaseAddress = new Uri(_urlApiSqlServer);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-
-                HttpResponseMessage response = await client.GetAsync("api/products");
-                response.EnsureSuccessStatusCode();
-                if (response.IsSuccessStatusCode)
+                // making dependency call
+                using (HttpClient client = new HttpClient())
                 {
-                    retorno = await response.Content.ReadAsAsync<List<Product>>();
+                    client.BaseAddress = new Uri(_urlApiSqlServer);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                    HttpResponseMessage response = await client.GetAsync("api/products");
+                    response.EnsureSuccessStatusCode();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        retorno = await response.Content.ReadAsAsync<List<Product>>();
+                        success = true;
+                    }
                 }
+            }
+            finally
+            {
+                timer.Stop();
+                _telemetryClient.TrackDependency("HTTP", "api/products", "", startTime, timer.Elapsed, success);
             }
 
             return retorno;
@@ -109,18 +171,31 @@ namespace ConsoleInterface
         {
             var retorno = new Product();
 
-            using (HttpClient client = new HttpClient())
+            var startTime = DateTime.UtcNow;
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            bool success = false;
+            try
             {
-                client.BaseAddress = new Uri(_urlApiSqlServer);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-
-                HttpResponseMessage response = await client.GetAsync(String.Format("api/products/{0}",productid));
-                response.EnsureSuccessStatusCode();
-                if (response.IsSuccessStatusCode)
+                // making dependency call
+                using (HttpClient client = new HttpClient())
                 {
-                    retorno = await response.Content.ReadAsAsync<Product>();
+                    client.BaseAddress = new Uri(_urlApiSqlServer);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                    HttpResponseMessage response = await client.GetAsync(String.Format("api/products/{0}", productid));
+                    response.EnsureSuccessStatusCode();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        retorno = await response.Content.ReadAsAsync<Product>();
+                        success = true;
+                    }
                 }
+            }
+            finally
+            {
+                timer.Stop();
+                _telemetryClient.TrackDependency("HTTP", "api/products/{0}", String.Format("api/products/{0}", productid), startTime, timer.Elapsed, success);
             }
 
             return retorno;
@@ -130,23 +205,36 @@ namespace ConsoleInterface
         {
             try
             {
-                using (HttpClient client = new HttpClient())
+                var startTime = DateTime.UtcNow;
+                var timer = System.Diagnostics.Stopwatch.StartNew();
+                bool success = false;
+                try
                 {
-                    client.BaseAddress = new Uri(_urlApiCosmos);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-
-                    HttpResponseMessage response = await client.PostAsJsonAsync("api/products/postproduct/", product);
-                    response.EnsureSuccessStatusCode();
-                    if (response.IsSuccessStatusCode)
+                    // making dependency call
+                    using (HttpClient client = new HttpClient())
                     {
-                        product = await response.Content.ReadAsAsync<Product>();
+                        client.BaseAddress = new Uri(_urlApiCosmos);
+                        client.DefaultRequestHeaders.Accept.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+
+                        HttpResponseMessage response = await client.PostAsJsonAsync("api/products/postproduct/", product);
+                        response.EnsureSuccessStatusCode();
+                        if (response.IsSuccessStatusCode)
+                        {
+                            product = await response.Content.ReadAsAsync<Product>();
+                            success = true;
+                        }
                     }
                 }
-
+                finally
+                {
+                    timer.Stop();
+                    _telemetryClient.TrackDependency("HTTP", "api/products/postproduct/", String.Format("api/products/postproduct/", product.ToString()), startTime, timer.Elapsed, success);
+                }
                 return product;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw e;
             }
