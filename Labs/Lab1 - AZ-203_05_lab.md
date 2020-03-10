@@ -241,11 +241,7 @@ In this exercise, you created the resources that you will use for the remainder 
 
 1.  In the open browser window, navigate to the **/api/values** relative path of your test application hosted at **localhost** on port **5000**.
 
-    **Note**: The full URL is <http://localhost:5000/api/values>.
-
-1.  In the same browser window, navigate to the **/api/values/7** relative path of your test application hosted at **localhost** on port **5000**.
-
-    **Note**: The full URL is <http://localhost:5000/api/values/7>
+    **Note**: The full URL is <http://localhost:5000/weatherforecast>.
 
 1.  Close the browser window that you recently opened.
 
@@ -298,7 +294,17 @@ In this exercise, you created the resources that you will use for the remainder 
     ```powershell
     cd F:\Labfiles\05\Starter\
     ```
-1.  Deploy the **api.zip** file to the **Web App** that you created earlier in this lab:
+
+1.  Publish your api (optional)
+
+    ```powershell
+    dotnet publish .\SimpleApi.csproj /p:WebPublishMethod=Package /p:platform="Any CPU" /p:configuration="Release" /p:PackageAsSingleFile=true /p:DesktopBuildPackageLocation=".\name-of-your-api-app.zip"
+    ```
+    
+    >NOTE: If you don´t want to use your own code (because you are suffering some kind of an error) you can use the pre-compiled version of the lab (next point)
+
+
+2.  Deploy the **api.zip** file to the **Web App** that you created earlier in this lab:
 
     ```powershell
     az webapp deployment source config-zip --resource-group MonitoredAssets --src api.zip --name <name-of-your-api-app>
@@ -306,11 +312,11 @@ In this exercise, you created the resources that you will use for the remainder 
 
     > **Note**: Replace the **\<name-of-your-api-app\>** placeholder with the name of the Web App that you created earlier in this lab. You recently queried this app's name in the previous steps.
 
-1. Access the **smpapi\*** Web App that you created earlier in this lab.
+3. Access the **smpapi\*** Web App that you created earlier in this lab.
 
-1. Open the **smpapi\*** Web App in your browser.
+4. Open the **smpapi\*** Web App in your browser.
 
-1. Perform a **GET** request to the **/api/values/** relative path of the website and observe the JSON array that is returned as a result of using the API.
+5. Perform a **GET** request to the **/api/values/** relative path of the website and observe the JSON array that is returned as a result of using the API.
 
     > **Note**: For example, if your URL is https://smpapistudent.azurewebsites.net, the new URL would be https://smpapistudent.azurewebsites.net/api/values.
 
