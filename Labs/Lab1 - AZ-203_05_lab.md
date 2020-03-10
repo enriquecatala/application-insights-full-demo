@@ -31,14 +31,6 @@ After you complete this lab, you will be able to:
 
 ### Before you start
 
-#### Sign in to the lab virtual machine
-
-Ensure that you are signed in to your **Windows 10** virtual machine by using the following credentials:
-
--   **Username**: Admin
-
--   **Password**: Pa55w.rd
-
 #### Review installed applications
 
 Observe the taskbar located at the bottom of your **Windows 10** desktop. The taskbar contains the icons for the applications that you will use in this lab:
